@@ -3,6 +3,7 @@ const router = express.Router()
 const {connectDB, register,login, me, requireAuth, requireAdmin, changeRole, getAllUsers, updateMe, deleteUser, changePassword}= require("./data.js")
 const { connectMongo, createProduct, getAllProducts, getOneProduct } = require("./config/mongo");
 const cors = require("cors");
+const PORT = process.env.PORT || 3000;
 
 const app = express()
 app.use(cors());
@@ -28,6 +29,6 @@ app.use("/api/categories", require("./route/category"))
 app.use("/api/reviews", require("./route/review"));
 app.use("/api/cart", require("./route/cart"));
 app.use("/api/orders", require("./route/order"));
-app.listen(3000, ()=>{
+app.listen(PORT, ()=>{
     console.log("rani nsmae")
 })
