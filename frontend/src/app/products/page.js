@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import axios from "axios";
 import Link from "next/link";
@@ -13,7 +13,7 @@ const categories = [
   { name: "Tablets", slug: "tablets", count: 1 },
 ];
 
-export default function ShopPage() {
+function ShopContent() {
   const [addingToCart, setAddingToCart] = useState(null);
   const [cartMessage, setCartMessage] = useState("");
   const searchParams = useSearchParams();
@@ -25,14 +25,14 @@ export default function ShopPage() {
   const [selectedCategory, setSelectedCategory] = useState(
     categoryFromURL || null,
   );
+
   useEffect(() => {
     async function fetchProducts() {
       try {
-        // ← try INSIDE the function
         const res = await axios.get("http://localhost:3000/api/products");
         console.log("RESPONSE product:", res.data);
         setProduct(res.data.products);
-         setOriginalProducts(res.data.products);
+        setOriginalProducts(res.data.products);
       } catch (error) {
         console.log(error);
       }
@@ -40,6 +40,7 @@ export default function ShopPage() {
 
     fetchProducts();
   }, []);
+
   const filtredProducts = selectedCategory
     ? product.filter((p) => p.category_id?.slug === selectedCategory)
     : product;
@@ -74,28 +75,21 @@ export default function ShopPage() {
     }
   }
 
-  
-
   function handleOption(e) {
     const value = e.target.value;
-  setSortOption(value);
-  let sorted = [...originalProducts];
+    setSortOption(value);
+    let sorted = [...originalProducts];
 
     if (value === "low-to-high") {
-      // sort low to high
       sorted.sort((a, b) => a.price - b.price);
     } else if (value === "high-to-low") {
-      // sort high to low
-      
       sorted.sort((a, b) => b.price - a.price);
-     } 
-    setProduct(sorted)
+    }
+    setProduct(sorted);
   }
 
-  
   return (
     <div className="max-w-7xl mx-auto px-8 mt-8">
-      
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         {/* Sidebar — 1 of 4 columns */}
         <aside className="md:col-span-1 flex flex-col gap-6">
@@ -145,33 +139,35 @@ export default function ShopPage() {
           <div className="bg-gray-50 rounded-2xl p-4 mb-6 flex items-center justify-between">
             {/* Left — sort dropdown + count */}
             <div className="flex items-center gap-4">
-              <select onChange={handleOption} className="border border-gray-300 rounded-lg px-4 py-2 text-sm text-slate-600 outline-none cursor-pointer">
+              <select
+                onChange={handleOption}
+                className="border border-gray-300 rounded-lg px-4 py-2 text-sm text-slate-600 outline-none cursor-pointer"
+              >
                 <option>Latest Products</option>
                 <option>low-to-high</option>
                 <option>high-to-low</option>
-                
               </select>
               <p className="text-slate-600 text-sm">
-                Showing {product.length} of {product.length}  Products
+                Showing {product.length} of {product.length} Products
               </p>
             </div>
 
             {/* Right — view toggle */}
-            
           </div>
+
           {cartMessage && (
-        <div
-          className={`mb-6 p-4 rounded-lg text-center ${
-            cartMessage.includes("✓")
-              ? "bg-green-50 text-green-700"
-              : "bg-red-50 text-red-700"
-          }`}
-        >
-          {cartMessage}
-        </div>
-      )}
+            <div
+              className={`mb-6 p-4 rounded-lg text-center ${
+                cartMessage.includes("✓")
+                  ? "bg-green-50 text-green-700"
+                  : "bg-red-50 text-red-700"
+              }`}
+            >
+              {cartMessage}
+            </div>
+          )}
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            
             {filtredProducts.map((p) => (
               <div key={p._id} className="bg-white rounded-2xl p-4 block">
                 {/* Image area with hover buttons */}
@@ -189,13 +185,11 @@ export default function ShopPage() {
                       <Eye size={18} />
                     </button>
                     <button
-                      disabled={addingToCart === product._id}
+                      disabled={addingToCart === p._id}
                       className="bg-blue-600 text-white rounded-full px-4 py-2 text-sm font-medium hover:bg-blue-700"
                       onClick={() => handleAddToCart(p._id, p.name)}
                     >
-                      {addingToCart === product._id
-                        ? "Adding..."
-                        : "Add to cart"}
+                      {addingToCart === p._id ? "Adding..." : "Add to cart"}
                     </button>
                     <button className="bg-white rounded-full p-2 shadow hover:bg-gray-50">
                       <Heart size={18} />
@@ -216,5 +210,13 @@ export default function ShopPage() {
         </main>
       </div>
     </div>
+  );
+}
+
+export default function ShopPage() {
+  return (
+    <Suspense fallback={<p className="text-center py-20">Loading...</p>}>
+      <ShopContent />
+    </Suspense>
   );
 }
